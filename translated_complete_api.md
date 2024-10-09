@@ -1,187 +1,121 @@
-
----
 sidebar_position: 1
 slug: /api
----
+API 参考
+RAGFlow 提供了 RESTful APIs，以便您将其功能集成到第三方应用程序中。
+基本 URL
+https://demo.ragflow.io/v1/
 
-# API参考
-
-RAGFlow 提供RESTful API，您可以将其功能集成到第三方应用程序中。
-
-## 基本URL
-```
-https://{访问地址}/v1/api/
-```
-
-## 授权
-
-RAGFlow的所有RESTful API都使用API密钥进行授权，请妥善保管，不要暴露在前端。
-将您的API密钥放在请求头中。
-
-```buildoutcfg
+授权
+RAGFlow 的所有 RESTful APIs 使用 API 密钥进行授权，因此请妥善保管并不要暴露给前端。在请求头中放入您的 API 密钥。
 Authorization: Bearer {API_KEY}
-```
 
-:::note
-在当前设计中，您从RAGFlow获得的RESTful API密钥与您的帐户相关联。确保不要共享此密钥，并将其保密。
-:::
+:::note 在当前设计中，从 RAGFlow 获取的 RESTful API 密钥不会过期。 :::
+获取您的 API 密钥：
+- 在 RAGFlow 中，点击页面顶部中间的聊天标签。
+- 悬停在相应的对话上 > 聊天机器人 API 以显示聊天机器人 API 配置页面。
+- 点击 API 密钥 > 创建新密钥来创建您的 API 密钥。
+- 复制并安全保存您的 API 密钥。
 
-## API请求格式
+创建对话
+此方法为特定用户创建一个新的对话。
+请求
+请求 URI
+:::note 您需要保存响应数据中返回的 data.id 值，这是后续对话的会话 ID。 :::
+请求参数
 
-所有API请求都应使用HTTPS协议发送，方法为`POST`、`GET`、`PUT`和`DELETE`。请参阅具体的API文档以获取详细信息。
+请求参数
+||||||
+|-|-|-|-|-|
+|名称|类型|是否必须|描述|id|
+|||字符串|是|分配给对话会话的唯一标识符。id 必须少于32个字符且不能为空。支持以下字符集：
+- 26个小写英文字母 (a-z)
+- 26个大写英文字母 (A-Z)
+- 10个数字 (0-9)
+- "_", "-", "."|
 
-### 请求头
+消息
+message: 指定对话会话中的所有对话。role: "user" 或 "assistant".content: 用户或助手的文本内容。引用格式如 ##0$$。中间的数字（本例中为0）表示它引用的是data.reference.chunks中的哪一部分。user_id: 由调用者设置。reference: 每个引用对应于data.message中助手的一个答案。
 
-API请求必须包含以下请求头：
+获取文档列表
+此方法从指定的知识库检索文档列表。
+请求
+请求 URI
+||||
+|-|-|-|
+|方法|请求 URI|POST|
+|||/api/list_kb_docs|
+请求参数
+||||||
+|-|-|-|-|-|
+|名称|类型|是否必须|描述|kb_name|
+|||字符串|是|知识库的名称，从中获取文档列表。|
+||page|整数|否|页数，默认:1。|
+||page_size|整数|否|每页的文档数量，默认:15。|
+||orderby|字符串|否|chunk_num, create_time, 或 size，默认:create_time|
+||desc|布尔|否|默认:True。|
+||keywords|字符串|否|文档名称的关键字。|
 
-```buildoutcfg
-Content-Type: application/json
-Authorization: Bearer {API_KEY}
-```
+删除文档
+此方法通过文档ID或名称删除文档。
+请求
+请求 URI
+||||
+|-|-|-|
+|方法|请求 URI|DELETE|
+|||/api/document|
+请求参数
+||||||
+|-|-|-|-|-|
+|名称|类型|是否必须|描述|doc_names|
+|||列表|否|文档名称列表。如果未设置doc_ids，则不能为空。|
+||doc_ids|列表|否|文档ID列表。如果未设置doc_names，则不能为空。|
 
-### 请求体
+获取文档内容
+此方法检索文档的内容。
+请求
+请求 URI
+||||
+|-|-|-|
+|方法|请求 URI|GET|
+|||/document/get/<id>|
 
-所有带有请求体的API调用都必须使用JSON格式。请根据API接口的要求，在请求体中包含所需的字段和参数。
+上传文件
+此方法将特定文件上传到指定的知识库。
+请求
+请求 URI
+||||
+|-|-|-|
+|方法|请求 URI|POST|
+|||/api/document/upload|
+请求参数
+||||||
+|-|-|-|-|-|
+|名称|类型|是否必须|描述|file|
+|||文件|是|要上传的文件。|
+||kb_name|字符串|是|要上传文件的知识库名称。|
+||parser_id|字符串|否|使用的解析方法（分块模板）。
+- "naive": 通用；
+- "qa": 问答；
+- "manual": 手动；
+- "table": 表格；
+- "paper": 论文；
+- "laws": 法律法规；
+- "presentation": 演示文稿；
+- "picture": 图片；
+- "one": 一个。|
+||run|字符串|否|1: 自动开始文件解析。如果未设置parser_id，RAGFlow默认使用通用模板。|
 
-### 响应格式
-
-API响应为JSON格式，包含请求的结果或错误信息。以下是一个典型的成功响应示例：
-
-```json
-{
-  "success": true,
-  "data": { ... }
-}
-```
-
-如果请求失败，响应将包含错误信息：
-
-```json
-{
-  "success": false,
-  "error": "Invalid request"
-}
-```
-
-## 错误处理
-
-RAGFlow的API会返回相应的HTTP状态码来指示请求是否成功。常见状态码包括：
-
-- `200 OK`: 请求成功。
-- `400 Bad Request`: 请求格式错误或缺少必要参数。
-- `401 Unauthorized`: API密钥无效或缺失。
-- `403 Forbidden`: 无权限访问资源。
-- `500 Internal Server Error`: 服务器内部错误，请稍后重试。
-
-## API接口
-
-### 1. 获取数据
-
-使用此API接口可以获取特定资源的数据。
-
-- **URL**: `/data`
-- **方法**: `GET`
-- **请求参数**: 
-    - `id`: 要获取的数据的ID（必需）。
-
-#### 示例请求
-
-```bash
-curl -X GET https://demo.ragflow.io/v1/data?id=123 -H "Authorization: Bearer {API_KEY}"
-```
-
-#### 示例响应
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": 123,
-    "name": "Example Data",
-    "description": "This is a sample response."
-  }
-}
-```
-
-### 2. 创建新资源
-
-使用此API接口可以创建新资源。
-
-- **URL**: `/data`
-- **方法**: `POST`
-- **请求体**:
-    - `name`: 新资源的名称（必需）。
-    - `description`: 新资源的描述（可选）。
-
-#### 示例请求
-
-```bash
-curl -X POST https://demo.ragflow.io/v1/data -H "Authorization: Bearer {API_KEY}" -H "Content-Type: application/json" -d '{"name": "New Data", "description": "This is a new data resource."}'
-```
-
-#### 示例响应
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": 124,
-    "name": "New Data",
-    "description": "This is a new data resource."
-  }
-}
-```
-
-### 3. 更新资源
-
-使用此API接口可以更新已有资源的信息。
-
-- **URL**: `/data/{id}`
-- **方法**: `PUT`
-- **请求体**:
-    - `name`: 新的资源名称（可选）。
-    - `description`: 新的资源描述（可选）。
-
-#### 示例请求
-
-```bash
-curl -X PUT https://demo.ragflow.io/v1/data/124 -H "Authorization: Bearer {API_KEY}" -H "Content-Type: application/json" -d '{"name": "Updated Data", "description": "This data has been updated."}'
-```
-
-#### 示例响应
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": 124,
-    "name": "Updated Data",
-    "description": "This data has been updated."
-  }
-}
-```
-
-### 4. 删除资源
-
-使用此API接口可以删除指定的资源。
-
-- **URL**: `/data/{id}`
-- **方法**: `DELETE`
-- **请求参数**: 
-    - `id`: 要删除的资源的ID（必需）。
-
-#### 示例请求
-
-```bash
-curl -X DELETE https://demo.ragflow.io/v1/data/124 -H "Authorization: Bearer {API_KEY}"
-```
-
-#### 示例响应
-
-```json
-{
-  "success": true,
-  "message": "Resource deleted successfully."
-}
-```
-
+获取文档片段
+此方法通过doc_name或doc_id检索特定文档的片段。
+请求
+请求 URI
+||||
+|-|-|-|
+|方法|请求 URI|GET|
+|||/api/list_chunks|
+请求参数
+||||||
+|-|-|-|-|-|
+|名称|类型|是否必须|描述|doc_name|
+|||字符串|否|知识库中文档的名称。如果未设置doc_id，则不能为空。|
+||doc_id|字符串|否|知识库中文档的ID。如果未设置doc_name，则不能为空。|
