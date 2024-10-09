@@ -1,6 +1,5 @@
 ---
-sidebar_position: 1
-slug: /api
+中文请直接使用浏览器翻译
 ---
 
 # API reference
