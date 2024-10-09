@@ -10,7 +10,7 @@ RAGFlow 提供RESTful API，您可以将其功能集成到第三方应用程序�
 
 ## 基本URL
 ```
-https://{访问地址}/v1/
+https://{访问地址}/v1/api/
 ```
 
 ## 授权
